@@ -1,65 +1,136 @@
-  .main-heading {
-    color: #007acc;
-  }
-  a {
-    color: #007acc;
-    text-decoration: none;
-  }
-  .square {
-    width: 100px;
-    height: 100px;
-    background-color: #007acc;
-    margin: 20px auto;
-    border-radius: 10px;
-  }
-  .demo-wrapper {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-  }
-    body {
-        font-family: Arial, sans-serif;
-        background-color: beige;
-        margin: 0;
-        padding: 20px;
-    }
-    .container {
-        max-width: 90%;
-        margin: 0 auto;
-        padding: 20px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        background-color: beige;
-        border-radius: 8px;
-    }
-  
-  .square {
-    width: 50px;
-    height: 50px;
-    background-color: coral;
-    margin-top: 20px;
-  }
-.heading{
-    font-size: 2rem;
-    color: #333;
-    text-align: start;
-    margin-bottom: 1rem;
-    margin-left: 250px;
-    /* padding-left: 250px; */
-  }
+/* ====== Global Styles ====== */
+body {
+  font-family: Arial, sans-serif;
+  background-color: beige;
+  margin: 0;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: end;
+  align-items: center;
+}
 
-  .paragraph {
-    font-size: 1.2rem;
-    color: #555;
-    line-height: 1.5;
-    margin-bottom: 1rem;
-  }
+.container {
+  max-width: 90%;
+  margin: 0 auto;
+  padding: 20px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  background-color: beige;
+  border-radius: 8px;
+}
 
-  .link {
-    color: #007acc;
-    text-decoration: none;
-  }
+/* ====== Headings ====== */
+.main-heading {
+  color: #007acc;
+}
 
-  .link:hover {
-    text-decoration: underline;
-}  
+.heading {
+  font-size: clamp(1.5rem, 2vw, 2.5rem);
+  color: black;
+  margin-left: -250px;
+  margin-bottom: 1rem;
+}
+
+.heading-container {
+  display: flex;
+  /* justify-content: start; */
+  width: 100%;
+  margin-bottom: 20px;
+  align-items: center;
+}
+
+/* ====== Paragraph & Link Styling ====== */
+.paragraph {
+  font-size: 1.2rem;
+  color: #555;
+  line-height: 1.5;
+  margin-bottom: 1rem;
+}
+
+a {
+  color: #007acc;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* ====== Squares (Optional Reusable Component) ====== */
+.square {
+  width: 50px;
+  height: 50px;
+  background-color: coral;
+  margin-top: 20px;
+  border-radius: 10px;
+}
+
+/* ====== Demo Wrapper Section ====== */
+.demo-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+/* ====== Contact Section ====== */
+.contacts {
+  margin-top: 20px;
+  padding: 20px;
+  background-color: #f9f9f9;
+}
+
+/* ====== Copy Button Styles ====== */
+.copyBtn {
+  width: 1rem;
+  height: 1rem;
+  background-color: white;
+  padding: 10px;
+  border: 1px solid #333;
+  border-radius: 20%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.3s ease;
+}
+
+.copyBtn:hover {
+  background-color: lightgray;
+  cursor: pointer;
+  border: 0.5px solid lightgray;
+  color: aqua;
+}
+
+.copyBtn:active {
+  background-color: gray;
+}
+
+/* ====== Copy Icon ====== */
+.copy-icon {
+  width: 1rem;
+  height: 1rem;
+  color: #007acc;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: transparent;
+}
+.copy-paragraph{
+  font-size: 1.2rem;
+  color: #555;
+  line-height: 1.5;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: start;
+}
+
+ul {
+  width: 100%;
+  /* display: flex;
+  justify-content: start;
+  flex-direction: column;
+  align-items: end; */
+  list-style-type: square;
+  padding: 0;
+}
