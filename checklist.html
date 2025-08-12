@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Checklist with Progress</title>
+<style>
+  :root {
+    --bg-light: #f8f9fa;
+    --text-light: #222;
+    --bg-dark: #121212;
+    --text-dark: #f1f1f1;
+    --primary: #4f46e5;
+    --secondary: #6366f1;
+    --accent: #ef4444;
+    --radius: 8px;
+  }
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background: var(--bg-dark);
+    color: var(--text-dark);
+    transition: background 0.3s, color 0.3s;
+  }
+  body.light {
+    background: var(--bg-light);
+    color: var(--text-light);
+  }
+  .container {
+    max-width: 500px;
+    margin: auto;
+    padding: 1rem;
+  }
+  h1 {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  button.theme-toggle {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 0.4rem 0.7rem;
+    border-radius: var(--radius);
+    cursor: pointer;
+  }
+  .input-area {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+  input[type=text] {
+    flex: 1;
+    padding: 0.5rem;
+    border-radius: var(--radius);
+    border: 1px solid #ccc;
+  }
+  button.add {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 0.5rem 0.8rem;
+    border-radius: var(--radius);
+    cursor: pointer;
+  }
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255,255,255,0.05);
+    padding: 0.6rem;
+    border-radius: var(--radius);
+    margin-bottom: 0.5rem;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+  }
+  li.completed span {
+    text-decoration: line-through;
+    opacity: 0.6;
+  }
+  button.delete {
+    background: none;
+    border: none;
+    color: var(--accent);
+    cursor: pointer;
+    font-size: 1.2rem;
+  }
+  .progress-container {
+    background: rgba(255,255,255,0.1);
+    border-radius: var(--radius);
+    height: 10px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+  }
+  .progress-bar {
+    background: var(--secondary);
+    height: 100%;
+    width: 0%;
+    transition: width 0.3s ease;
+  }
+  @media (max-width: 600px) {
+    h1 { font-size: 1.3rem; }
+    input[type=text] { font-size: 0.9rem; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>
+    Checklist
+    <button class="theme-toggle">🌙</button>
+  </h1>
+
+  <div class="progress-container">
+    <div class="progress-bar"></div>
+  </div>
+
+  <div class="input-area">
+    <input type="text" placeholder="Add new item..." id="itemInput">
+    <button class="add">+</button>
+  </div>
+
+  <ul id="checklist"></ul>
+</div>
+
+<script>
+  const body = document.body;
+  const themeBtn = document.querySelector('.theme-toggle');
+  const addBtn = document.querySelector('.add');
+  const input = document.getElementById('itemInput');
+  const list = document.getElementById('checklist');
+  const progressBar = document.querySelector('.progress-bar');
+
+  let items = [];
+
+  themeBtn.addEventListener('click', () => {
+    body.classList.toggle('light');
+    themeBtn.textContent = body.classList.contains('light') ? '☀️' : '🌙';
+  });
+
+  addBtn.addEventListener('click', addItem);
+  input.addEventListener('keypress', e => {
+    if (e.key === 'Enter') addItem();
+  });
+
+  function addItem() {
+    const text = input.value.trim();
+    if (!text) return;
+    items.push({ text, completed: false });
+    input.value = '';
+    render();
+  }
+
+  function toggleItem(index) {
+    items[index].completed = !items[index].completed;
+    render();
+  }
+
+  function deleteItem(index) {
+    items.splice(index, 1);
+    render();
+  }
+
+  function updateProgress() {
+    const total = items.length;
+    const completed = items.filter(i => i.completed).length;
+    const percent = total ? (completed / total) * 100 : 0;
+    progressBar.style.width = percent + '%';
+  }
+
+  function render() {
+    list.innerHTML = '';
+    items.forEach((item, index) => {
+      const li = document.createElement('li');
+      if (item.completed) li.classList.add('completed');
+
+      const label = document.createElement('span');
+      label.textContent = item.text;
+      label.style.cursor = 'pointer';
+      label.addEventListener('click', () => toggleItem(index));
+
+      const delBtn = document.createElement('button');
+      delBtn.innerHTML = '🗑️';
+      delBtn.className = 'delete';
+      delBtn.addEventListener('click', () => deleteItem(index));
+
+      li.appendChild(label);
+      li.appendChild(delBtn);
+      list.appendChild(li);
+    });
+    updateProgress();
+  }
+</script>
+</body>
+</html>
