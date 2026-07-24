@@ -1,133 +1,126 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>stub — share a code snippet</title>
-<meta name="description" content="Paste code, get a link. Nothing is stored on a server — the snippet lives entirely inside the URL.">
-<meta name="theme-color" content="#17161C">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%AB%3C/text%3E%3C/svg%3E">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live Code Share</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background-color: #121212; color: #f5f5f5;
+      display: flex; flex-direction: column; height: 100vh;
+    }
+    .container {
+      display: flex; flex-direction: column; height: 100%;
+      max-width: 800px; margin: 0 auto; padding: 1rem; width: 100%;
+    }
+    header {
+      display: flex; flex-wrap: wrap; justify-content: space-between;
+      align-items: center; margin-bottom: 1rem; gap: 0.5rem;
+    }
+    h1 { font-size: 1.25rem; color: #fff; display: flex; align-items: center; gap: 10px; }
+    .status { font-size: 0.8rem; color: #10b981; }
+    .actions { display: flex; gap: 0.5rem; }
+    button {
+      background-color: #3b82f6; color: white; border: none;
+      padding: 0.75rem 1rem; border-radius: 6px; font-size: 1rem;
+      cursor: pointer; font-weight: 500;
+    }
+    button:active { background-color: #2563eb; }
+    button.secondary { background-color: #333; }
+    button.secondary:active { background-color: #444; }
+    textarea {
+      flex-grow: 1; background-color: #1e1e1e; color: #d4d4d4;
+      font-family: 'Courier New', Courier, monospace; font-size: 1rem;
+      padding: 1rem; border: 1px solid #333; border-radius: 6px;
+      resize: none; outline: none; width: 100%;
+    }
+    textarea:focus { border-color: #3b82f6; }
+  </style>
 </head>
 <body>
-<div class="page">
 
-  <header class="topbar">
-    <a href="#" id="homeLink" class="wordmark" aria-label="stub — start a new snippet">
-      <span class="wordmark-hole" aria-hidden="true"></span>stub<span class="dot">·</span>
-    </a>
-  </header>
-
-  <main class="stage">
-
-    <!-- ===================== COMPOSE ===================== -->
-    <section id="compose-section" class="ticket" hidden>
-      <div class="ticket-top">
-        <p class="eyebrow">new stub</p>
-        <label class="visually-hidden" for="labelInput">Snippet label (optional)</label>
-        <input
-          id="labelInput"
-          class="label-input"
-          type="text"
-          placeholder="Untitled snippet"
-          maxlength="80"
-          autocomplete="off"
-          autocapitalize="off"
-          autocorrect="off"
-          spellcheck="false"
-        >
-        <label class="visually-hidden" for="codeInput">Paste your code</label>
-        <textarea
-          id="codeInput"
-          class="code-area"
-          placeholder="Paste your code here…"
-          autocomplete="off"
-          autocapitalize="off"
-          autocorrect="off"
-          spellcheck="false"
-          wrap="soft"
-        ></textarea>
-        <p class="meta-line" id="composeMeta">0 lines · 0 chars</p>
+  <div class="container">
+    <header>
+      <h1>Code Share <span id="status" class="status">Connecting...</span></h1>
+      <div class="actions">
+        <button id="btn-copy-code" class="secondary">Copy Code</button>
+        <button id="btn-copy-link">Copy Room Link</button>
       </div>
+    </header>
+    
+    <textarea id="code-editor" placeholder="Type here. Anyone with the link will see this live..."></textarea>
+  </div>
 
-      <div class="perforation" aria-hidden="true">
-        <span class="hole hole-left"></span>
-        <span class="hole hole-right"></span>
-      </div>
+  <!-- Firebase v10 Modular SDK via CDN -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+    
+    const firebaseConfig = {
+        apiKey: "AIzaSyCPx1vLo5LqCVm18oAkwT9LWQ1hrdmYxYE",
+        authDomain: "codeshare-sh.firebaseapp.com",
+        databaseURL: "https://codeshare-sh-default-rtdb.asia-southeast1.firebasedatabase.app/",
+        projectId: "codeshare-sh",
+        storageBucket: "codeshare-sh.firebasestorage.app",
+        messagingSenderId: "72808844048",
+        appId: "1:72808844048:web:cb95960c9f814df07a3395"
+    };
+    // 1. Initialize Room ID
+    let roomId = window.location.hash.substring(1);
+    if (!roomId) {
+      // Generate a random 6-character room ID if none exists
+      roomId = Math.random().toString(36).substring(2, 8);
+      window.location.hash = roomId;
+    }
 
-      <div class="ticket-bottom">
-        <button id="issueBtn" class="btn btn-primary btn-block" type="button">Issue stub</button>
-        <p class="warn-line" id="lengthWarning" hidden></p>
-        <p class="fine-print">Nothing is stored anywhere — your code lives only in this link.</p>
-      </div>
-    </section>
+    // 2. Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const roomRef = ref(db, 'pads/' + roomId);
 
-    <!-- ===================== VIEW ===================== -->
-    <section id="view-section" class="ticket" hidden>
-      <div class="ticket-top">
-        <p class="eyebrow">stub no. <span id="ticketId">——</span></p>
-        <p class="ticket-label" id="viewLabel"></p>
+    const editor = document.getElementById('code-editor');
+    const status = document.getElementById('status');
+    const btnCopyCode = document.getElementById('btn-copy-code');
+    const btnCopyLink = document.getElementById('btn-copy-link');
 
-        <div class="action-row">
-          <button id="selectAllBtn" class="btn btn-ghost" type="button">Select all</button>
-          <button id="copyCodeBtn" class="btn btn-primary" type="button">Copy code</button>
-        </div>
+    // 3. Listen for changes from Firebase
+    onValue(roomRef, (snapshot) => {
+      status.textContent = "Live 🟢";
+      const data = snapshot.val() || "";
+      
+      // Only update if text is different, to prevent cursor jumping while typing
+      if (editor.value !== data) {
+        const cursor = editor.selectionStart;
+        editor.value = data;
+        // Restore cursor position
+        editor.selectionStart = cursor;
+        editor.selectionEnd = cursor;
+      }
+    });
 
-        <label class="visually-hidden" for="codeView">Snippet contents</label>
-        <textarea
-          id="codeView"
-          class="code-area"
-          readonly
-          wrap="soft"
-          spellcheck="false"
-        ></textarea>
-        <p class="meta-line" id="viewMeta"></p>
-      </div>
+    // 4. Send local changes to Firebase
+    editor.addEventListener('input', () => {
+      set(roomRef, editor.value);
+    });
 
-      <div class="perforation" aria-hidden="true">
-        <span class="hole hole-left"></span>
-        <span class="hole hole-right"></span>
-      </div>
+    // 5. Mobile Buttons
+    btnCopyCode.addEventListener('click', async () => {
+      if (!editor.value) return;
+      await navigator.clipboard.writeText(editor.value);
+      const originalText = btnCopyCode.textContent;
+      btnCopyCode.textContent = 'Copied!';
+      setTimeout(() => btnCopyCode.textContent = originalText, 2000);
+    });
 
-      <div class="ticket-bottom">
-        <p class="field-label">Share link</p>
-        <div class="link-row">
-          <label class="visually-hidden" for="linkField">Shareable link</label>
-          <input id="linkField" class="link-input" type="text" readonly>
-          <button id="copyLinkBtn" class="btn btn-ghost btn-compact" type="button">Copy</button>
-          <button id="shareBtn" class="btn btn-ghost btn-compact" type="button" hidden>Share</button>
-        </div>
-        <a href="#" id="newStubLink" class="new-stub-link">+ New stub</a>
-      </div>
-    </section>
+    btnCopyLink.addEventListener('click', async () => {
+      await navigator.clipboard.writeText(window.location.href);
+      const originalText = btnCopyLink.textContent;
+      btnCopyLink.textContent = 'Link Copied!';
+      setTimeout(() => btnCopyLink.textContent = originalText, 2000);
+    });
+  </script>
 
-    <!-- ===================== ERROR ===================== -->
-    <section id="error-section" class="ticket" hidden>
-      <div class="ticket-top">
-        <p class="eyebrow">torn stub</p>
-        <h1 class="error-heading" id="errorHeading">This stub is torn.</h1>
-        <p class="error-body" id="errorBody">The link is missing part of its code — ask for a fresh one.</p>
-      </div>
-      <div class="perforation" aria-hidden="true">
-        <span class="hole hole-left"></span>
-        <span class="hole hole-right"></span>
-      </div>
-      <div class="ticket-bottom">
-        <a href="#" id="errorNewStubLink" class="btn btn-primary btn-block" style="text-align:center; text-decoration:none;">Issue a new stub</a>
-      </div>
-    </section>
-
-  </main>
-
-  <footer class="footnote">
-    <span id="statusLive" class="visually-hidden" role="status" aria-live="polite"></span>
-    stub runs entirely in your browser. no database, no accounts, no tracking.
-  </footer>
-
-</div>
-<script src="app.js" defer></script>
 </body>
 </html>
