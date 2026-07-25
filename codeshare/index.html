@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live Code Share</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background-color: #121212; color: #f5f5f5;
+      display: flex; flex-direction: column; height: 100vh;
+    }
+    .container {
+      display: flex; flex-direction: column; height: 100%;
+      max-width: 800px; margin: 0 auto; padding: 1rem; width: 100%;
+    }
+    header {
+      display: flex; flex-wrap: wrap; justify-content: space-between;
+      align-items: center; margin-bottom: 1rem; gap: 0.5rem;
+    }
+    h1 { font-size: 1.25rem; color: #fff; display: flex; align-items: center; gap: 10px; }
+    .status { font-size: 0.8rem; color: #10b981; }
+    .actions { display: flex; gap: 0.5rem; }
+    button {
+      background-color: #3b82f6; color: white; border: none;
+      padding: 0.75rem 1rem; border-radius: 6px; font-size: 1rem;
+      cursor: pointer; font-weight: 500;
+    }
+    button:active { background-color: #2563eb; }
+    button.secondary { background-color: #333; }
+    button.secondary:active { background-color: #444; }
+    textarea {
+      flex-grow: 1; background-color: #1e1e1e; color: #d4d4d4;
+      font-family: 'Courier New', Courier, monospace; font-size: 1rem;
+      padding: 1rem; border: 1px solid #333; border-radius: 6px;
+      resize: none; outline: none; width: 100%;
+    }
+    textarea:focus { border-color: #3b82f6; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <h1>Code Share <span id="status" class="status">Connecting...</span></h1>
+      <div class="actions">
+        <button id="btn-copy-code" class="secondary">Copy Code</button>
+        <button id="btn-copy-link">Copy Room Link</button>
+      </div>
+    </header>
+    
+    <textarea id="code-editor" placeholder="Type here. Anyone with the link will see this live..."></textarea>
+  </div>
+
+  <!-- Firebase v10 Modular SDK via CDN -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+    
+    const firebaseConfig = {
+        apiKey: "AIzaSyCPx1vLo5LqCVm18oAkwT9LWQ1hrdmYxYE",
+        authDomain: "codeshare-sh.firebaseapp.com",
+        databaseURL: "https://codeshare-sh-default-rtdb.asia-southeast1.firebasedatabase.app/",
+        projectId: "codeshare-sh",
+        storageBucket: "codeshare-sh.firebasestorage.app",
+        messagingSenderId: "72808844048",
+        appId: "1:72808844048:web:cb95960c9f814df07a3395"
+    };
+    // 1. Initialize Room ID
+    let roomId = window.location.hash.substring(1);
+    if (!roomId) {
+      // Generate a random 6-character room ID if none exists
+      roomId = Math.random().toString(36).substring(2, 8);
+      window.location.hash = roomId;
+    }
+
+    // 2. Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const roomRef = ref(db, 'pads/' + roomId);
+
+    const editor = document.getElementById('code-editor');
+    const status = document.getElementById('status');
+    const btnCopyCode = document.getElementById('btn-copy-code');
+    const btnCopyLink = document.getElementById('btn-copy-link');
+
+    // 3. Listen for changes from Firebase
+    onValue(roomRef, (snapshot) => {
+      status.textContent = "Live 🟢";
+      const data = snapshot.val() || "";
+      
+      // Only update if text is different, to prevent cursor jumping while typing
+      if (editor.value !== data) {
+        const cursor = editor.selectionStart;
+        editor.value = data;
+        // Restore cursor position
+        editor.selectionStart = cursor;
+        editor.selectionEnd = cursor;
+      }
+    });
+
+    // 4. Send local changes to Firebase
+    editor.addEventListener('input', () => {
+      set(roomRef, editor.value);
+    });
+
+    // 5. Mobile Buttons
+    btnCopyCode.addEventListener('click', async () => {
+      if (!editor.value) return;
+      await navigator.clipboard.writeText(editor.value);
+      const originalText = btnCopyCode.textContent;
+      btnCopyCode.textContent = 'Copied!';
+      setTimeout(() => btnCopyCode.textContent = originalText, 2000);
+    });
+
+    btnCopyLink.addEventListener('click', async () => {
+      await navigator.clipboard.writeText(window.location.href);
+      const originalText = btnCopyLink.textContent;
+      btnCopyLink.textContent = 'Link Copied!';
+      setTimeout(() => btnCopyLink.textContent = originalText, 2000);
+    });
+  </script>
+
+</body>
+</html>
