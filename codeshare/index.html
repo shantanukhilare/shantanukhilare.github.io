@@ -80,8 +80,42 @@
             </svg>
             <span>Share</span>
           </button>
+          <button id="btn-api-key" class="icon-btn secondary icon-only" type="button" title="Set your Gemini API key">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="7" cy="7" r="3.2" />
+              <path d="M9.3 9.3 16 16M13 12l1.7 1.7M15.3 9.7 17 11.4" />
+            </svg>
+          </button>
+          <button id="btn-ask-ai" class="icon-btn ai" type="button" title="Send this text to Gemini as a prompt and replace it with the reply">
+            <svg viewBox="0 0 20 20" fill="currentColor">
+              <path d="M10 2.2 11.3 6.7 15.8 8 11.3 9.3 10 13.8 8.7 9.3 4.2 8 8.7 6.7Z" />
+              <path d="M16.2 11.5 16.8 13.4 18.7 14 16.8 14.6 16.2 16.5 15.6 14.6 13.7 14 15.6 13.4Z" />
+            </svg>
+            <span>Ask AI</span>
+          </button>
         </div>
       </header>
+
+      <div class="modal-overlay" id="key-modal" hidden>
+        <div class="modal-panel">
+          <h2>Gemini API key</h2>
+          <p class="modal-hint">
+            Stored only in this browser's local storage. It's sent straight to
+            <code>generativelanguage.googleapis.com</code> and nowhere else — not synced to the room.
+          </p>
+          <input
+            type="password"
+            id="api-key-input"
+            placeholder="AIza..."
+            autocomplete="off"
+            spellcheck="false"
+          />
+          <div class="modal-actions">
+            <button type="button" id="btn-key-cancel" class="icon-btn secondary">Cancel</button>
+            <button type="button" id="btn-key-save" class="icon-btn">Save key</button>
+          </div>
+        </div>
+      </div>
 
       <main>
         <div class="editor-shell" id="editor-shell">

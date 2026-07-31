@@ -121,6 +121,118 @@ async function copyRoomLink() {
   await navigator.clipboard.writeText(window.location.href);
 }
 
+// 7b. Gemini "Ask AI" — sends the current text as a prompt, replaces it with the reply
+const GEMINI_KEY_STORAGE = "codeshare_gemini_key";
+const GEMINI_MODEL = "gemini-3.6-flash";
+
+const btnApiKey = document.getElementById("btn-api-key");
+const btnAskAI = document.getElementById("btn-ask-ai");
+const askAILabel = btnAskAI.querySelector("span");
+const keyModal = document.getElementById("key-modal");
+const apiKeyInput = document.getElementById("api-key-input");
+const btnKeySave = document.getElementById("btn-key-save");
+const btnKeyCancel = document.getElementById("btn-key-cancel");
+
+function getStoredKey() {
+  return localStorage.getItem(GEMINI_KEY_STORAGE) || "";
+}
+
+function openKeyModal() {
+  apiKeyInput.value = getStoredKey();
+  keyModal.hidden = false;
+  apiKeyInput.focus();
+}
+
+function closeKeyModal() {
+  keyModal.hidden = true;
+}
+
+btnApiKey.addEventListener("click", openKeyModal);
+btnKeyCancel.addEventListener("click", closeKeyModal);
+
+btnKeySave.addEventListener("click", () => {
+  const value = apiKeyInput.value.trim();
+  if (value) {
+    localStorage.setItem(GEMINI_KEY_STORAGE, value);
+  } else {
+    localStorage.removeItem(GEMINI_KEY_STORAGE);
+  }
+  closeKeyModal();
+});
+
+keyModal.addEventListener("click", (event) => {
+  if (event.target === keyModal) closeKeyModal();
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && !keyModal.hidden) closeKeyModal();
+});
+
+function setAskAILoading(isLoading) {
+  btnAskAI.disabled = isLoading;
+  btnAskAI.classList.toggle("is-loading", isLoading);
+  askAILabel.textContent = isLoading ? "Thinking…" : "Ask AI";
+}
+
+async function askAI() {
+  const prompt = editor.value.trim();
+  if (!prompt) {
+    alert("Type a prompt in the box first.");
+    return;
+  }
+
+  const apiKey = getStoredKey();
+  if (!apiKey) {
+    openKeyModal();
+    return;
+  }
+
+  setAskAILoading(true);
+
+  try {
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-goog-api-key": apiKey,
+      },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+      }),
+    });
+
+    if (!response.ok) {
+      const errorBody = await response.json().catch(() => null);
+      const message = errorBody?.error?.message || `Request failed (${response.status})`;
+      throw new Error(message);
+    }
+
+    const data = await response.json();
+    const reply = data.candidates?.[0]?.content?.parts?.map((p) => p.text || "").join("").trim();
+
+    if (reply) {
+      editor.value = reply;
+      set(roomRef, reply);
+      updateMeta();
+
+      editorShell.classList.remove("is-syncing");
+      void editorShell.offsetWidth;
+      editorShell.classList.add("is-syncing");
+    }
+  } catch (err) {
+    const lower = String(err.message || "").toLowerCase();
+    if (lower.includes("api key not valid") || lower.includes("invalid") || lower.includes("permission_denied")) {
+      localStorage.removeItem(GEMINI_KEY_STORAGE);
+    }
+    alert(`Gemini request failed: ${err.message}`);
+  } finally {
+    setAskAILoading(false);
+  }
+}
+
+btnAskAI.addEventListener("click", askAI);
+
 // 8. Mobile / action buttons
 btnCopyCode.addEventListener("click", async () => {
   if (!editor.value) return;
