@@ -16,27 +16,54 @@ const firebaseConfig = {
   messagingSenderId: "72808844048",
   appId: "1:72808844048:web:cb95960c9f814df07a3395",
 };
-// 1. Initialize Room ID
+
+// 1. Room ID
 let roomId = window.location.hash.substring(1);
 if (!roomId) {
-  // Generate a random 6-character room ID if none exists
   roomId = Math.random().toString(36).substring(2, 8);
   window.location.hash = roomId;
 }
 
-// 2. Initialize Firebase
+// 2. Firebase
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const roomRef = ref(db, "pads/" + roomId);
+const connectedRef = ref(db, ".info/connected");
 
+// 3. DOM references
 const editor = document.getElementById("code-editor");
-const status = document.getElementById("status");
+const editorShell = document.getElementById("editor-shell");
+const statusEl = document.getElementById("status");
+const statusLabel = statusEl.querySelector(".status-label");
+const roomIdEl = document.getElementById("room-id");
+const btnRoom = document.getElementById("btn-room");
+const btnCutCode = document.getElementById("btn-cut-code");
+const btnPasteCode = document.getElementById("btn-paste-code");
 const btnCopyCode = document.getElementById("btn-copy-code");
 const btnCopyLink = document.getElementById("btn-copy-link");
+const charCountEl = document.getElementById("char-count");
+const lineCountEl = document.getElementById("line-count");
 
-// 3. Listen for changes from Firebase
+roomIdEl.textContent = roomId;
+
+// 4. Real connection status (reflects the actual socket, not just data arrival)
+let hasConnectedBefore = false;
+onValue(connectedRef, (snapshot) => {
+  const isConnected = snapshot.val() === true;
+  if (isConnected) {
+    statusEl.classList.remove("status--connecting");
+    statusEl.classList.add("status--live");
+    statusLabel.textContent = "Live";
+    hasConnectedBefore = true;
+  } else {
+    statusEl.classList.remove("status--live");
+    statusEl.classList.add("status--connecting");
+    statusLabel.textContent = hasConnectedBefore ? "Reconnecting…" : "Connecting…";
+  }
+});
+
+// 5. Listen for changes from Firebase
 onValue(roomRef, (snapshot) => {
-  status.textContent = "Live 🟢";
   const data = snapshot.val() || "";
 
   // Only update if text is different, to prevent cursor jumping while typing
@@ -46,26 +73,177 @@ onValue(roomRef, (snapshot) => {
     // Restore cursor position
     editor.selectionStart = cursor;
     editor.selectionEnd = cursor;
+
+    // Briefly light up the panel border so an incoming remote edit is visible
+    editorShell.classList.remove("is-syncing");
+    void editorShell.offsetWidth; // restart the animation
+    editorShell.classList.add("is-syncing");
   }
+
+  updateMeta();
 });
 
-// 4. Send local changes to Firebase
+// 6. Send local changes to Firebase
 editor.addEventListener("input", () => {
   set(roomRef, editor.value);
+  updateMeta();
 });
 
-// 5. Mobile Buttons
+function updateMeta() {
+  const value = editor.value;
+  const chars = value.length;
+  const lines = value === "" ? 1 : value.split("\n").length;
+  charCountEl.textContent = `${chars} char${chars === 1 ? "" : "s"}`;
+  lineCountEl.textContent = `${lines} line${lines === 1 ? "" : "s"}`;
+}
+
+// 7. Button success feedback (swaps in a checkmark, then restores)
+const flashTimers = new WeakMap();
+function flashButton(button, message) {
+  if (flashTimers.has(button)) {
+    clearTimeout(flashTimers.get(button));
+  } else {
+    button.dataset.originalHtml = button.innerHTML;
+  }
+  button.innerHTML =
+    '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10.5 8 14.5 16 5.5"/></svg><span>' +
+    message +
+    "</span>";
+  const timer = setTimeout(() => {
+    button.innerHTML = button.dataset.originalHtml;
+    delete button.dataset.originalHtml;
+    flashTimers.delete(button);
+  }, 1600);
+  flashTimers.set(button, timer);
+}
+
+async function copyRoomLink() {
+  await navigator.clipboard.writeText(window.location.href);
+}
+
+// 8. Mobile / action buttons
 btnCopyCode.addEventListener("click", async () => {
   if (!editor.value) return;
   await navigator.clipboard.writeText(editor.value);
-  const originalText = btnCopyCode.textContent;
-  btnCopyCode.textContent = "Copied!";
-  setTimeout(() => (btnCopyCode.textContent = originalText), 2000);
+  flashButton(btnCopyCode, "Copied!");
 });
 
 btnCopyLink.addEventListener("click", async () => {
-  await navigator.clipboard.writeText(window.location.href);
-  const originalText = btnCopyLink.textContent;
-  btnCopyLink.textContent = "Link Copied!";
-  setTimeout(() => (btnCopyLink.textContent = originalText), 2000);
+  await copyRoomLink();
+  flashButton(btnCopyLink, "Link copied!");
 });
+
+btnRoom.addEventListener("click", async () => {
+  await copyRoomLink();
+  const original = roomIdEl.textContent;
+  roomIdEl.textContent = "copied!";
+  setTimeout(() => (roomIdEl.textContent = original), 1400);
+});
+
+btnCutCode.addEventListener("click", async () => {
+  if (!editor.value) return;
+
+  await navigator.clipboard.writeText(editor.value);
+  editor.value = "";
+  set(roomRef, "");
+  updateMeta();
+
+  flashButton(btnCutCode, "Cut!");
+});
+
+// Paste Code
+btnPasteCode.addEventListener("click", async () => {
+  try {
+    const text = await navigator.clipboard.readText();
+    editor.value = text;
+    set(roomRef, text);
+    updateMeta();
+
+    flashButton(btnPasteCode, "Pasted!");
+  } catch (err) {
+    alert("Clipboard access denied.");
+  }
+});
+
+const placeholders = [
+  "Type here. Anyone with the link will see this live...",
+  "There are only 10 types of people...",
+  "It works on my machine.",
+  "I don't always test my code... I do it in production.",
+  "A SQL query walks into a bar and asks, 'Can I join you?'",
+  "Debugging is like being the detective in a crime movie where you're also the murderer.",
+  "My code doesn't have bugs. It develops random features.",
+  "Ctrl + S is your best friend.",
+  "One does not simply center a div.",
+  "Java developers wear glasses because they don't C#.",
+  "There is no place like 127.0.0.1.",
+  "404: Motivation not found.",
+  "Commit early. Commit often.",
+  "Git happens.",
+  "Programming is 10% coding and 90% Googling.",
+  "I came. I saw. I console.logged.",
+  "Semicolons save lives.",
+  "Keep calm and clear the cache.",
+  "Delete production? Y/N",
+  "TODO: Fix this later.",
+  "Works perfectly... don't touch it.",
+  "Keyboard not found. Press F1 to continue.",
+  "Hello, World!",
+  "Have you tried turning it off and on again?",
+  "Code never lies. Comments sometimes do.",
+  "Sleep is just a power-saving mode.",
+  "My favorite language is coffee.",
+  "You had one job... compiler.",
+  "Trust me, I'm a programmer.",
+  "The bug is hiding in line 437.",
+  "This code was written at 2 AM.",
+  "Stack Overflow is open in another tab.",
+  "Feature or bug? Yes.",
+  "Keep your commits atomic.",
+  "If it compiles, ship it.",
+  "Welcome to the infinite loop.",
+  "Don't panic. It's just JavaScript.",
+  "npm install fixes everything... until it doesn't.",
+  "CSS is harder than quantum physics.",
+  "AI wrote this. Maybe.",
+  "Write code. Break code. Repeat.",
+  "No semicolons were harmed here.",
+  "Clean code > Clever code.",
+  "Why is this null?",
+  "This textarea is bug-free... probably.",
+  "Paste your masterpiece here.",
+  "Coding is cheaper than therapy.",
+  "May the source be with you.",
+  "Hack. Build. Share.",
+  "Start typing... magic happens.",
+];
+
+editor.placeholder = placeholders[Math.floor(Math.random() * placeholders.length)];
+
+// 9. Ambient "live" background particles — small packets drifting up
+const particleContainer = document.getElementById("bg-particles");
+const PARTICLE_COUNT = 16;
+
+for (let i = 0; i < PARTICLE_COUNT; i++) {
+  const particle = document.createElement("span");
+  particle.className = "bg-particle";
+
+  const size = 3 + Math.random() * 5;
+  const left = Math.random() * 100;
+  const duration = 14 + Math.random() * 14;
+  const delay = Math.random() * -28;
+  const drift = (Math.random() * 60 - 30).toFixed(0) + "px";
+  const color = Math.random() > 0.5 ? "var(--signal)" : "var(--pulse)";
+
+  particle.style.cssText = `
+    left: ${left}%;
+    width: ${size}px;
+    height: ${size}px;
+    background: ${color};
+    animation-duration: ${duration}s;
+    animation-delay: ${delay}s;
+    --drift: ${drift};
+  `;
+
+  particleContainer.appendChild(particle);
+}
