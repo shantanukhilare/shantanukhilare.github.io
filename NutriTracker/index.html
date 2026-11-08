@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Nutrition Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef3f0;--surface:#fff;--ink:#14231d;--muted:#5b6b64;--line:#d6e0db;--accent:#1f7a56;--accent-ink:#fff;--track:#dfe9e4;--warn:#c2571a;--over:#b3261e;--wt:#2b5fb4;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1815;--surface:#17231e;--ink:#e6f0ea;--muted:#93a69c;--line:#27372f;--accent:#4cc592;--accent-ink:#06130d;--track:#243730;--warn:#f0a066;--over:#ff8a80;--wt:#7fb0ff}}
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.45 "Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:760px;margin:0 auto;padding:16px 16px 48px}
+h1{font-size:22px;margin:0;font-weight:700}
+h2{font-size:16px;margin:0 0 12px;font-weight:700}
+section{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;margin-top:14px}
+header{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.bar-r{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 12px;min-height:40px}
+button:hover{border-color:var(--accent)}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:700}
+button.ghost{border:none;background:none;color:var(--muted);padding:4px 8px;min-height:32px}
+button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+input,select{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:8px 10px;min-height:40px;width:100%}
+label{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
+.tabs{display:flex;gap:8px;margin-top:14px}
+.tabs button{flex:1}
+.hero{display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.ring{position:relative;width:150px;height:150px;flex:none}
+.ring svg{transform:rotate(-90deg)}
+.ring .c{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring b{font-size:30px;line-height:1}
+.ring span{font-size:13px;color:var(--muted)}
+.macros{flex:1;min-width:220px;display:grid;gap:12px}
+.row{display:grid;gap:4px}
+.row .top{display:flex;justify-content:space-between;font-size:14px}
+.row .top span:last-child{color:var(--muted)}
+.bar{height:8px;background:var(--track);border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:99px;transition:width .3s}
+.bar i.high{background:var(--warn)}.bar i.over{background:var(--over)}
+.grid{display:grid;grid-template-columns:1fr 110px auto;gap:10px;align-items:end}
+.inl{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end}
+@media (max-width:520px){.grid{grid-template-columns:1fr 1fr}}
+.log{list-style:none;margin:0;padding:0}
+.log li{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.log li:first-child{border-top:none}
+.log .nm{flex:1;min-width:0;overflow-wrap:anywhere}
+.log small,.note{color:var(--muted)}
+.log .kc{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.empty{color:var(--muted);margin:0}
+details{margin-top:12px}summary{cursor:pointer;color:var(--muted);font-size:14px}
+.f3{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-top:10px}
+.note{font-size:13px;margin:10px 0 0}
+.stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:14px}
+.stat{border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.stat b{display:block;font-size:20px;font-variant-numeric:tabular-nums}
+.stat span{font-size:13px;color:var(--muted)}
+.chartbox{overflow-x:auto;margin-top:12px}
+.chartbox svg{display:block;width:100%;min-width:480px;height:auto}
+.bars{fill:var(--accent)}.axis{stroke:var(--line)}.tgt{stroke:var(--warn);stroke-dasharray:4 4}
+.wl{fill:none;stroke:var(--wt);stroke-width:2.5}.wd{fill:var(--wt)}
+.tx{fill:var(--muted);font-size:11px}
+.err{color:var(--over);font-size:14px;margin:8px 0 0}
+</style>
+</head>
+<body>
+<main>
+
+<section id="auth" hidden>
+  <h1>Nutrition Tracker</h1>
+  <p class="note">Sign in to keep your records private to you and synced across devices.</p>
+  <div class="f3" style="grid-template-columns:1fr 1fr">
+    <div><label for="em">Email</label><input id="em" type="email" autocomplete="email"></div>
+    <div><label for="pw">Password</label><input id="pw" type="password" autocomplete="current-password"></div>
+  </div>
+  <div class="bar-r" style="margin-top:12px">
+    <button class="primary" id="signin">Sign in</button>
+    <button id="signup">Create account</button>
+    <button id="google">Continue with Google</button>
+  </div>
+  <p class="err" id="autherr" role="alert"></p>
+</section>
+
+<div id="app" hidden>
+<header>
+  <h1>Nutrition Tracker</h1>
+  <button class="ghost" id="out">Sign out</button>
+</header>
+<div class="tabs" role="group" aria-label="View">
+  <button id="tToday" aria-pressed="true">Today</button>
+  <button id="tSum" aria-pressed="false">Summary</button>
+</div>
+<p class="err" id="dberr" role="alert"></p>
+
+<div id="pToday">
+  <section>
+    <div class="bar-r" style="justify-content:flex-end;margin-bottom:10px">
+      <button id="prev" aria-label="Previous day">&lsaquo;</button>
+      <input type="date" id="date" aria-label="Date" style="width:auto">
+      <button id="next" aria-label="Next day">&rsaquo;</button>
+    </div>
+    <div class="hero">
+      <div class="ring" id="ring" role="img"></div>
+      <div class="macros" id="macros"></div>
+    </div>
+    <details><summary>Edit daily targets</summary><div class="f3" id="targets"></div></details>
+  </section>
+
+  <section>
+    <h2>Weight</h2>
+    <div class="inl">
+      <div><label for="wt">Body weight for this day (kg)</label><input id="wt" type="number" min="1" step="0.1" placeholder="e.g. 72.4"></div>
+      <button class="primary" id="saveW">Save weight</button>
+    </div>
+  </section>
+
+  <section>
+    <h2>Add food</h2>
+    <div class="grid">
+      <div style="grid-column:1/-1"><label for="q">Search foods</label><input id="q" type="search" placeholder="e.g. dal, egg, banana" autocomplete="off"></div>
+      <div><label for="food">Food</label><select id="food"></select></div>
+      <div><label for="qty">Servings</label><input id="qty" type="number" min="0.1" step="0.1" value="1"></div>
+      <button class="primary" id="add">Add to log</button>
+    </div>
+    <p class="note" id="serv"></p>
+    <details><summary>Add a custom food</summary>
+      <div class="f3">
+        <div><label for="cn">Name</label><input id="cn"></div>
+        <div><label for="cs">Serving label</label><input id="cs" placeholder="1 bowl"></div>
+        <div><label for="cc">Calories (kcal)</label><input id="cc" type="number" min="0" step="any"></div>
+        <div><label for="cp">Protein (g)</label><input id="cp" type="number" min="0" step="any"></div>
+        <div><label for="cf">Fiber (g)</label><input id="cf" type="number" min="0" step="any"></div>
+      </div>
+      <div style="margin-top:10px"><button id="saveCustom" class="primary">Save and log food</button></div>
+    </details>
+  </section>
+
+  <section><h2>Food log</h2><ul class="log" id="log"></ul></section>
+</div>
+
+<div id="pSum" hidden>
+  <section>
+    <div class="bar-r" style="justify-content:space-between">
+      <div class="bar-r" role="group" aria-label="Period">
+        <button id="mWeek" aria-pressed="true">Week</button>
+        <button id="mMonth" aria-pressed="false">Month</button>
+      </div>
+      <div class="bar-r">
+        <button id="sPrev" aria-label="Previous period">&lsaquo;</button>
+        <b id="sLabel" style="min-width:150px;text-align:center"></b>
+        <button id="sNext" aria-label="Next period">&rsaquo;</button>
+      </div>
+    </div>
+    <div class="stats" id="stats"></div>
+    <div class="bar-r" style="margin-top:14px" role="group" aria-label="Chart metric" id="metrics"></div>
+    <div class="chartbox" id="chart"></div>
+  </section>
+</div>
+</div>
+</main>
+
+<script type="module">
+const firebaseConfig = {
+  apiKey: "AIzaSyDbxt1Bij5ykx1V5UQynXl5UMS2uCDfPQY",
+  authDomain: "nutritracker-66bc1.firebaseapp.com",
+  databaseURL: "https://nutritracker-66bc1-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "nutritracker-66bc1",
+  storageBucket: "nutritracker-66bc1.firebasestorage.app",
+  messagingSenderId: "774726412729",
+  appId: "1:774726412729:web:813c86b4b6e23c4a7dae68"
+};
+
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import {getAuth,onAuthStateChanged,signInWithPopup,GoogleAuthProvider,signInWithEmailAndPassword,createUserWithEmailAndPassword,signOut} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import {getDatabase,ref,onValue,set,remove,push} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const r1=(v,d=1)=>String(Math.round(v*10**d)/10**d);
+const iso=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+const parse=s=>{const [y,m,d]=s.split("-").map(Number);return new Date(y,m-1,d)};
+const addDays=(d,n)=>new Date(d.getFullYear(),d.getMonth(),d.getDate()+n);
+
+// [name, serving, kcal, protein g, fiber g] (approximate per serving)
+const FOODS=[
+["Roti (chapati)","1 medium",120,3.1,3],["Cooked white rice","1 cup",205,4.2,0.6],["Dal (cooked lentils)","1 cup",230,18,15.6],
+["Chickpeas, cooked","1 cup",269,14.5,12.5],["Paneer","100 g",265,18,0],["Egg, whole","1 large",72,6.3,0],
+["Milk, whole","1 cup",150,8,0],["Curd / plain yogurt","1 cup",150,8.5,0],["Chicken breast, cooked","100 g",165,31,0],
+["Salmon, cooked","100 g",206,22,0],["Tofu, firm","100 g",76,8,0.3],["Whey protein","1 scoop",120,24,0],
+["Oats, dry","40 g",150,5,4],["Whole wheat bread","1 slice",80,4,1.9],["Idli","1 piece",58,2,0.4],
+["Banana","1 medium",105,1.3,3.1],["Apple","1 medium",95,0.5,4.4],["Orange","1 medium",62,1.2,3.1],
+["Spinach, cooked","1 cup",41,5.3,4.3],["Broccoli, cooked","1 cup",55,3.7,5.1],["Potato, boiled","1 medium",130,3,2.4],
+["Sweet potato, baked","1 medium",112,2,3.9],["Moong sprouts","1 cup",31,3.2,1.9],["Peanuts","30 g",170,7.7,2.4],["Almonds","28 g",164,6,3.5]
+];
+const DEFT={cal:2000,p:100,f:30};
+
+if(firebaseConfig.apiKey.startsWith("YOUR_")){
+  $("auth").hidden=false;
+  $("autherr").textContent="Firebase is not configured yet. Paste your own web app config at the top of the script in this file.";
+  ["signin","signup","google"].forEach(i=>$(i).disabled=true);
+}else{
+const app=initializeApp(firebaseConfig), auth=getAuth(app), db=getDatabase(app);
+let uid=null, unsub=null, D={days:{},custom:{},targets:{...DEFT}};
+let day=iso(new Date()), anchor=iso(new Date()), mode="week", metric="cal";
+const P=p=>ref(db,`users/${uid}/${p}`);
+const T=()=>D.targets;
+const dayLog=d=>Object.entries((D.days[d]&&D.days[d].log)||{}).map(([id,e])=>({id,...e}));
+const sums=L=>L.reduce((a,e)=>({cal:a.cal+e.cal,p:a.p+e.p,f:a.f+e.f}),{cal:0,p:0,f:0});
+const allFoods=()=>FOODS.concat(Object.values(D.custom).map(c=>[c.name,c.serving,c.cal,c.p,c.f]));
+const cls=p=>p>1.15?"over":p>1?"high":"";
+const guard=pr=>pr.catch(e=>{$("dberr").textContent="Could not save: "+e.message});
+
+// ---- auth ----
+const authErr=e=>{$("autherr").textContent=e.message.replace("Firebase: ","")};
+$("signin").onclick=()=>signInWithEmailAndPassword(auth,$("em").value,$("pw").value).catch(authErr);
+$("signup").onclick=()=>createUserWithEmailAndPassword(auth,$("em").value,$("pw").value).catch(authErr);
+$("google").onclick=()=>signInWithPopup(auth,new GoogleAuthProvider()).catch(authErr);
+$("out").onclick=()=>signOut(auth);
+onAuthStateChanged(auth,u=>{
+  if(unsub){unsub();unsub=null}
+  if(!u){uid=null;$("app").hidden=true;$("auth").hidden=false;return}
+  uid=u.uid;$("auth").hidden=true;$("app").hidden=false;$("autherr").textContent="";
+  unsub=onValue(ref(db,`users/${uid}`),s=>{
+    const v=s.val()||{};
+    D={days:v.days||{},custom:v.custom||{},targets:{...DEFT,...(v.targets||{})}};
+    $("dberr").textContent="";render();
+  },e=>{$("dberr").textContent="Could not load data: "+e.message});
+});
+
+// ---- tabs ----
+function setTab(t){
+  $("pToday").hidden=t!=="today";$("pSum").hidden=t!=="sum";
+  $("tToday").setAttribute("aria-pressed",t==="today");$("tSum").setAttribute("aria-pressed",t==="sum");
+  render();
+}
+$("tToday").onclick=()=>setTab("today");$("tSum").onclick=()=>setTab("sum");
+
+// ---- today ----
+$("prev").onclick=()=>{day=iso(addDays(parse(day),-1));render()};
+$("next").onclick=()=>{day=iso(addDays(parse(day),1));render()};
+$("date").onchange=e=>{if(e.target.value){day=e.target.value;render()}};
+
+function renderToday(){
+  $("date").value=day;
+  const t=sums(dayLog(day)),tg=T(),R=62,C=2*Math.PI*R,left=tg.cal-t.cal,p=Math.min(t.cal/tg.cal,1);
+  $("ring").innerHTML=`<svg width="150" height="150" viewBox="0 0 150 150"><circle cx="75" cy="75" r="${R}" fill="none" stroke="var(--track)" stroke-width="12"/><circle cx="75" cy="75" r="${R}" fill="none" stroke="${t.cal>tg.cal*1.15?"var(--over)":"var(--accent)"}" stroke-width="12" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-p)}"/></svg><div class="c"><b>${Math.round(t.cal)}</b><span>of ${tg.cal} kcal</span><span>${left>=0?Math.round(left)+" left":Math.round(-left)+" over"}</span></div>`;
+  $("ring").setAttribute("aria-label",`Calories: ${Math.round(t.cal)} of ${tg.cal}`);
+  $("macros").innerHTML=[["Protein","p"],["Fiber","f"]].map(([n,k])=>{const pc=t[k]/tg[k];return `<div class="row"><div class="top"><span>${n}</span><span>${r1(t[k])} / ${tg[k]} g</span></div><div class="bar"><i class="${cls(pc)}" style="width:${Math.min(pc*100,100)}%"></i></div></div>`}).join("");
+  [["tgcal","cal"],["tgp","p"],["tgf","f"]].forEach(([id,k])=>{const el=$(id);if(el&&document.activeElement!==el)el.value=tg[k]});
+  const w=D.days[day]&&D.days[day].weight;if(document.activeElement!==$("wt"))$("wt").value=w??"";
+  const L=dayLog(day);
+  $("log").innerHTML=L.length?L.map(e=>`<li><div class="nm"><div>${esc(e.name)}</div><small>${r1(e.qty,2)} × ${esc(e.serving)} · P ${r1(e.p)} g · F ${r1(e.f)} g</small></div><div class="kc">${Math.round(e.cal)} kcal</div><button class="ghost" data-del="${e.id}" aria-label="Remove ${esc(e.name)}">Remove</button></li>`).join(""):`<li><p class="empty">Nothing logged for this day. Pick a food above and add it.</p></li>`;
+  document.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>guard(remove(P(`days/${day}/log/${b.dataset.del}`))));
+  fillFoods();
+}
+$("targets").innerHTML=[["Calories (kcal)","tgcal","cal"],["Protein (g)","tgp","p"],["Fiber (g)","tgf","f"]].map(([l,id])=>`<div><label for="${id}">${l}</label><input id="${id}" type="number" min="1"></div>`).join("");
+[["tgcal","cal"],["tgp","p"],["tgf","f"]].forEach(([id,k])=>$(id).onchange=e=>{const v=parseFloat(e.target.value);if(v>0)guard(set(P("targets"),{...T(),[k]:v}));else e.target.value=T()[k]});
+
+$("saveW").onclick=()=>{
+  const v=parseFloat($("wt").value);
+  if(v>0)guard(set(P(`days/${day}/weight`),v));
+  else if($("wt").value==="")guard(remove(P(`days/${day}/weight`)));
+  else $("wt").focus();
+};
+
+function fillFoods(){
+  const q=$("q").value.trim().toLowerCase(),cur=$("food").value,list=allFoods().map((f,i)=>[f,i]).filter(([f])=>!q||f[0].toLowerCase().includes(q));
+  $("food").innerHTML=list.length?list.map(([f,i])=>`<option value="${i}">${esc(f[0])}</option>`).join(""):`<option value="">No match</option>`;
+  if(cur&&list.some(([,i])=>String(i)===cur))$("food").value=cur;
+  const f=allFoods()[$("food").value];
+  $("serv").textContent=f?`1 serving = ${f[1]} · ${f[2]} kcal, ${f[3]} g protein, ${f[4]} g fiber`:"";
+}
+$("q").oninput=fillFoods;$("food").onchange=fillFoods;
+const logFood=(f,qty)=>guard(push(P(`days/${day}/log`),{name:f[0],serving:f[1],qty,cal:f[2]*qty,p:f[3]*qty,f:f[4]*qty}));
+$("add").onclick=()=>{const f=allFoods()[$("food").value],q=parseFloat($("qty").value);if(!f||!(q>0)){$("qty").focus();return}logFood(f,q)};
+$("saveCustom").onclick=()=>{
+  const name=$("cn").value.trim();if(!name){$("cn").focus();return}
+  const c={name,serving:$("cs").value.trim()||"1 serving",cal:Math.max(0,parseFloat($("cc").value)||0),p:Math.max(0,parseFloat($("cp").value)||0),f:Math.max(0,parseFloat($("cf").value)||0)};
+  guard(push(P("custom"),c));["cn","cs","cc","cp","cf"].forEach(i=>$(i).value="");
+  logFood([c.name,c.serving,c.cal,c.p,c.f],1);
+};
+
+// ---- summary ----
+const METRICS=[["cal","Calories","kcal"],["p","Protein","g"],["f","Fiber","g"],["w","Weight","kg"]];
+$("metrics").innerHTML=METRICS.map(([k,n])=>`<button data-m="${k}" aria-pressed="${k===metric}">${n}</button>`).join("");
+document.querySelectorAll("[data-m]").forEach(b=>b.onclick=()=>{metric=b.dataset.m;renderSum()});
+function setMode(m){mode=m;$("mWeek").setAttribute("aria-pressed",m==="week");$("mMonth").setAttribute("aria-pressed",m==="month");renderSum()}
+$("mWeek").onclick=()=>setMode("week");$("mMonth").onclick=()=>setMode("month");
+function shiftP(n){const a=parse(anchor);anchor=iso(mode==="week"?addDays(a,7*n):new Date(a.getFullYear(),a.getMonth()+n,1));renderSum()}
+$("sPrev").onclick=()=>shiftP(-1);$("sNext").onclick=()=>shiftP(1);
+
+function renderSum(){
+  const a=parse(anchor);let s,e;
+  if(mode==="week"){s=addDays(a,-((a.getDay()+6)%7));e=addDays(s,6)}else{s=new Date(a.getFullYear(),a.getMonth(),1);e=new Date(a.getFullYear(),a.getMonth()+1,0)}
+  const fm=(d,o)=>d.toLocaleDateString(undefined,o);
+  $("sLabel").textContent=mode==="week"?`${fm(s,{day:"numeric",month:"short"})} – ${fm(e,{day:"numeric",month:"short",year:"numeric"})}`:fm(s,{month:"long",year:"numeric"});
+  const rows=[];for(let d=s;d<=e;d=addDays(d,1)){const k=iso(d),L=dayLog(k),t=sums(L);rows.push({d,k,logged:L.length>0,...t,w:(D.days[k]&&D.days[k].weight)??null})}
+  const lg=rows.filter(r=>r.logged),n=lg.length,avg=k=>n?lg.reduce((x,r)=>x+r[k],0)/n:null,tg=T();
+  const ws=rows.filter(r=>r.w!=null),chg=ws.length>1?ws[ws.length-1].w-ws[0].w:null;
+  const st=[
+    ["Days logged",`${n} of ${rows.length}`],
+    ["Avg calories / day",n?Math.round(avg("cal"))+" kcal":"–"],
+    ["Avg protein / day",n?r1(avg("p"))+" g":"–"],
+    ["Avg fiber / day",n?r1(avg("f"))+" g":"–"],
+    ["Protein goal met",n?`${lg.filter(r=>r.p>=tg.p).length} of ${n} days`:"–"],
+    ["Fiber goal met",n?`${lg.filter(r=>r.f>=tg.f).length} of ${n} days`:"–"],
+    ["Avg weight",ws.length?r1(ws.reduce((x,r)=>x+r.w,0)/ws.length)+" kg":"–"],
+    ["Weight change",chg==null?"–":(chg>0?"+":"")+r1(chg)+" kg"]
+  ];
+  $("stats").innerHTML=st.map(([l,v])=>`<div class="stat"><b>${v}</b><span>${l}</span></div>`).join("");
+  document.querySelectorAll("[data-m]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.m===metric));
+  $("chart").innerHTML=chart(rows,metric,tg);
+}
+
+function chart(rows,m,tg){
+  const W=700,H=220,pl=44,pr=10,pt=14,pb=26,iw=W-pl-pr,ih=H-pt-pb,nn=rows.length,u=METRICS.find(x=>x[0]===m)[2];
+  const val=r=>m==="w"?r.w:(r.logged?r[m]:null),vals=rows.map(val),have=vals.filter(v=>v!=null);
+  if(!have.length)return `<p class="empty">No ${m==="w"?"weight entries":"food logged"} in this period yet.</p>`;
+  const target=m==="w"?null:tg[m];
+  let lo=0,hi=Math.max(target||0,...have)*1.1;
+  if(m==="w"){lo=Math.min(...have);hi=Math.max(...have);const pad=Math.max((hi-lo)*0.2,0.5);lo-=pad;hi+=pad}
+  const y=v=>pt+ih*(1-(v-lo)/(hi-lo)),x=i=>pl+iw*(i+0.5)/nn;
+  let g=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${m==="w"?"Weight":"Daily "+METRICS.find(x=>x[0]===m)[1]} chart">`;
+  for(let k=0;k<=3;k++){const v=lo+(hi-lo)*k/3,yy=y(v);g+=`<line class="axis" x1="${pl}" x2="${W-pr}" y1="${yy}" y2="${yy}"/><text class="tx" x="${pl-6}" y="${yy+4}" text-anchor="end">${r1(v,m==="w"?1:0)}</text>`}
+  if(target)g+=`<line class="tgt" x1="${pl}" x2="${W-pr}" y1="${y(target)}" y2="${y(target)}"/>`;
+  if(m==="w"){
+    let pts=[];vals.forEach((v,i)=>{if(v!=null)pts.push([x(i),y(v),v])});
+    g+=`<polyline class="wl" points="${pts.map(p=>p[0]+","+p[1]).join(" ")}"/>`+pts.map(p=>`<circle class="wd" cx="${p[0]}" cy="${p[1]}" r="4"><title>${p[2]} kg</title></circle>`).join("");
+  }else{
+    const bw=iw/nn*0.7;
+    vals.forEach((v,i)=>{if(v!=null)g+=`<rect class="bars" x="${x(i)-bw/2}" y="${y(v)}" width="${bw}" height="${y(lo)-y(v)}" rx="2"><title>${rows[i].k}: ${r1(v)} ${u}</title></rect>`});
+  }
+  const step=nn>16?3:1;
+  rows.forEach((r,i)=>{if(i%step===0)g+=`<text class="tx" x="${x(i)}" y="${H-8}" text-anchor="middle">${nn>10?r.d.getDate():r.d.toLocaleDateString(undefined,{weekday:"short"})}</text>`});
+  return g+"</svg>"+(target?`<p class="note">Dashed line is your daily target (${target} ${u}).</p>`:"");
+}
+
+function render(){if(!uid)return;if(!$("pToday").hidden)renderToday();if(!$("pSum").hidden)renderSum()}
+}
+</script>
+</body>
+</html>
