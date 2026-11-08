@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatBot</title>
+    <link rel="icon" type="image/png" href="../favicon.png">
+
+    <!-- Load marked.js for parsing Markdown -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    
+    <!-- Load highlight.js for styling code blocks -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #f3f4f6;
+            --chat-bg: #ffffff;
+            --text-color: #374151;
+            --user-msg: #e5e7eb;
+            --bot-msg: #f9fafb;
+            --border-color: #e5e7eb;
+            --primary: #3b82f6;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        .chat-container {
+            width: 100%;
+            max-width: 800px;
+            background: var(--chat-bg);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+            text-align: center;
+            background: #fff;
+        }
+
+        .header input[type="password"] {
+            margin-top: 10px;
+            padding: 8px;
+            width: 80%;
+            max-width: 300px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+        }
+
+        .chat-history {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .message {
+            max-width: 85%;
+            padding: 15px 20px;
+            border-radius: 8px;
+            line-height: 1.6;
+        }
+
+        .user-message {
+            align-self: flex-end;
+            background-color: var(--user-msg);
+            border-bottom-right-radius: 0;
+        }
+
+        .bot-message {
+            align-self: flex-start;
+            background-color: var(--bot-msg);
+            border: 1px solid var(--border-color);
+            border-bottom-left-radius: 0;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        /* Markdown styling inside bot message */
+        .bot-message p { margin-top: 0; }
+        .bot-message pre {
+            background-color: #282c34;
+            padding: 16px;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+        .bot-message code {
+            font-family: 'Courier New', Courier, monospace;
+        }
+        /* Inline code */
+        .bot-message p code {
+            background-color: rgba(0,0,0,0.05);
+            padding: 2px 4px;
+            border-radius: 3px;
+            color: #e06c75;
+        }
+
+        .input-area {
+            padding: 20px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 10px;
+            background: #fff;
+        }
+
+        .input-area textarea {
+            flex-grow: 1;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            resize: none;
+            height: 24px;
+            font-family: inherit;
+        }
+
+        .input-area button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+
+        .input-area button:hover {
+            background-color: #2563eb;
+        }
+
+        .input-area button:disabled {
+            background-color: #93c5fd;
+            cursor: not-allowed;
+        }
+        
+        .loading {
+            display: none;
+            align-self: flex-start;
+            color: #6b7280;
+            font-style: italic;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+
+<div class="chat-container">
+    <div class="header">
+        <h2>Gemini Chat</h2>
+        <input type="password" id="apiKey" placeholder="Enter your Gemini API Key here...">
+    </div>
+    
+    <div class="chat-history" id="chatHistory">
+        <!-- Messages will appear here -->
+        <div class="message bot-message">
+            Hello! Enter your API key above and start chatting.
+        </div>
+    </div>
+    
+    <div class="loading" id="loadingIndicator">Gemini is thinking...</div>
+
+    <div class="input-area">
+        <textarea id="promptInput" placeholder="Type your message here..." onkeypress="handleEnter(event)"></textarea>
+        <button id="sendBtn" onclick="sendMessage()">Send</button>
+    </div>
+</div>
+
+<script>
+    // Configure marked to use highlight.js for code blocks
+    marked.setOptions({
+        highlight: function(code, lang) {
+            const language = hljs.getLanguage(lang) ? lang : 'plaintext';
+            return hljs.highlight(code, { language }).value;
+        }
+    });
+
+    const chatHistory = document.getElementById('chatHistory');
+    const promptInput = document.getElementById('promptInput');
+    const apiKeyInput = document.getElementById('apiKey');
+    const sendBtn = document.getElementById('sendBtn');
+    const loadingIndicator = document.getElementById('loadingIndicator');
+
+    // Conversation history to maintain context
+    let conversationContext = [];
+
+    function handleEnter(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    }
+
+    function addMessageToUI(text, isUser) {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `message ${isUser ? 'user-message' : 'bot-message'}`;
+        
+        if (isUser) {
+            msgDiv.textContent = text; // Plain text for user
+        } else {
+            msgDiv.innerHTML = marked.parse(text); // Markdown for bot
+        }
+        
+        chatHistory.appendChild(msgDiv);
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+    }
+
+    async function sendMessage() {
+        const text = promptInput.value.trim();
+        const apiKey = apiKeyInput.value.trim();
+
+        if (!text) return;
+        if (!apiKey) {
+            alert("Please enter your Gemini API Key.");
+            return;
+        }
+
+        // 1. Add user message to UI
+        addMessageToUI(text, true);
+        promptInput.value = '';
+        
+        // 2. Add to context
+        conversationContext.push({
+            "role": "user",
+            "parts": [{"text": text}]
+        });
+
+        // 3. UI Loading state
+        sendBtn.disabled = true;
+        loadingIndicator.style.display = 'block';
+        chatHistory.appendChild(loadingIndicator); // Move to bottom
+
+        try {
+            // 4. Call Gemini API (using gemini-3.6-flash as the latest standard fast model)
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${apiKey}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    contents: conversationContext
+                })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error?.message || "API Request failed");
+            }
+
+            // 5. Extract response text
+            const botReply = data.candidates[0].content.parts[0].text;
+
+            // 6. Add bot response to UI and context
+            addMessageToUI(botReply, false);
+            conversationContext.push({
+                "role": "model",
+                "parts": [{"text": botReply}]
+            });
+
+        } catch (error) {
+            addMessageToUI(`**Error:** ${error.message}`, false);
+            // Remove the failed user prompt from context so we don't send it again on the next try
+            conversationContext.pop(); 
+        } finally {
+            // 7. Reset UI state
+            sendBtn.disabled = false;
+            loadingIndicator.style.display = 'none';
+            promptInput.focus();
+        }
+    }
+</script>
+
+</body>
+</html>

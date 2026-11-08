@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile PV Lab Pre-Operation & Safety Checks Form</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 900px;
+            margin: auto;
+        }
+        h1 {
+            text-align: center;
+            color: #2c5282;
+        }
+        form {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        fieldset {
+            border: 1px solid #cbd5e0;
+            border-radius: 5px;
+            margin-bottom: 25px;
+            padding: 15px;
+            background-color: #fafafa;
+        }
+        legend {
+            font-weight: bold;
+            color: #2b6cb0;
+            background: #e2e8f0;
+            padding: 5px 10px;
+            border-radius: 4px;
+            border: 1px solid #cbd5e0;
+        }
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+        .form-group {
+            flex: 1;
+            min-width: 250px;
+            margin-right: 15px;
+            margin-bottom: 10px;
+        }
+        .form-group:last-child {
+            margin-right: 0;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        input[type="text"], input[type="number"], select, input[type="file"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+            background: #fff;
+        }
+        th, td {
+            border: 1px solid #cbd5e0;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #edf2f7;
+            font-weight: bold;
+        }
+        .verify-select {
+            width: 80px;
+        }
+        .submit-btn {
+            background-color: #3182ce;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+        }
+        .submit-btn:hover {
+            background-color: #2b6cb0;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Mobile PV Lab Pre-Operation & Safety Checks</h1>
+
+    <form action="#" method="POST" enctype="multipart/form-data">
+
+        <!-- 1. General Information -->
+        <fieldset>
+            <legend>1. General Information</legend>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="lab_name">Lab Name:</label>
+                    <select id="lab_name" name="lab_name" required>
+                        <option value="">-- Select Lab --</option>
+                        <option value="M06">M06</option>
+                        <option value="M12">M12</option>
+                        <option value="M12-XL2">M12-XL2</option>
+                        <option value="G12">G12</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="plant_name">Plant Name (Alphanumeric):</label>
+                    <input type="text" id="plant_name" name="plant_name" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="plant_capacity">Plant Capacity:</label>
+                    <input type="text" id="plant_capacity" name="plant_capacity" required>
+                </div>
+                <div class="form-group">
+                    <label for="num_modules">Number of Modules to be Tested (Integer):</label>
+                    <input type="number" id="num_modules" name="num_modules" step="1" required>
+                </div>
+            </div>
+        </fieldset>
+
+        <!-- 2. MoPV Lab Environmental Condition -->
+        <fieldset>
+            <legend>2. MoPV Lab Environmental Condition</legend>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Lab Temperature (°C):</label>
+                    <input type="number" step="any" name="lab_temp">
+                </div>
+                <div class="form-group">
+                    <label>Frequency (Hz):</label>
+                    <input type="number" step="any" name="frequency">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Humidity (RH%):</label>
+                    <input type="number" step="any" name="humidity">
+                </div>
+                <div class="form-group">
+                    <label>Neutral-to-Ground Voltage:</label>
+                    <input type="number" step="any" name="ng_voltage">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Voltage:</label>
+                    <input type="number" step="any" name="voltage">
+                </div>
+                <div class="form-group">
+                    <label>Testing Engineer ID:</label>
+                    <input type="text" name="engineer_id">
+                </div>
+            </div>
+        </fieldset>
+
+        <!-- 3. PPE Verification -->
+        <fieldset>
+            <legend>3. PPE Verification</legend>
+            <table>
+                <tr>
+                    <th>Sr.</th>
+                    <th>Check Points</th>
+                    <th>Description</th>
+                    <th>Verify (Y/N) & Upload</th>
+                </tr>
+                <tr>
+                    <td>4</td>
+                    <td>PPE Verification</td>
+                    <td>Confirm operator is wearing UV-blocking safety glasses and heat-resistant gloves.</td>
+                    <td>
+                        <select name="ppe_verify" class="verify-select"><option>Y</option><option>N</option></select>
+                        <input type="file" name="ppe_image" accept="image/*">
+                    </td>
+                </tr>
+                <tr>
+                    <td>5</td>
+                    <td>Enclosure Interlocks</td>
+                    <td>Test the physical housing and magnetic door sensors to ensure zero UV light leakage.</td>
+                    <td>
+                        <select name="interlocks_verify" class="verify-select"><option>Y</option><option>N</option></select>
+                        <input type="file" name="interlocks_image" accept="image/*">
+                    </td>
+                </tr>
+                <tr>
+                    <td>6</td>
+                    <td>Cooling Fans</td>
+                    <td>Verify that all extraction fans and intake vents are clear of dust and spinning smoothly.</td>
+                    <td><select name="fans_verify" class="verify-select"><option>Y</option><option>N</option></select></td>
+                </tr>
+                <tr>
+                    <td>7</td>
+                    <td>Emergency Stop</td>
+                    <td>Press and reset the E-stop button to verify immediate power termination to the lamp arrays.</td>
+                    <td><select name="estop_verify" class="verify-select"><option>Y</option><option>N</option></select></td>
+                </tr>
+            </table>
+        </fieldset>
+
+        <!-- 4. Warm-Up & Hardware Initialization -->
+        <fieldset>
+            <legend>4. Warm-Up & Hardware Initialization</legend>
+            <table>
+                <tr>
+                    <th>Sr.</th>
+                    <th>Check Points</th>
+                    <th>Verify (Y/N)</th>
+                </tr>
+                <tr>
+                    <td>8</td>
+                    <td>Power Supply Startup: Turn on the main breaker followed by the lamp control units.</td>
+                    <td><select name="startup_verify" class="verify-select"><option>Y</option><option>N</option></select></td>
+                </tr>
+                <tr>
+                    <td>9</td>
+                    <td>Stabilization Period: Wait 30 minutes for Xenon arc lamps, or 5 minutes for stable LED arrays.</td>
+                    <td><select name="stab_verify" class="verify-select"><option>Y</option><option>N</option></select></td>
+                </tr>
+                <tr>
+                    <td>10</td>
+                    <td>Shutter Action: Execute a cycle test on the mechanical shutter.</td>
+                    <td><select name="shutter_verify" class="verify-select"><option>Y</option><option>N</option></select></td>
+                </tr>
+            </table>
+        </fieldset>
+
+        <!-- 5. Calibration & Performance Verification -->
+        <fieldset>
+            <legend>5. Calibration & Performance Verification</legend>
+            <table>
+                <tr>
+                    <th>Sr.</th>
+                    <th>Check Points</th>
+                    <th>Verify (Y/N)</th>
+                </tr>
+                <tr><td>11</td><td>Reference Module Placement</td><td><select class="verify-select"><option>Y</option><option>N</option></select></td></tr>
+                <tr><td>12</td><td>Warm-up Time (LED ≥ 5 min / Xenon ≥ 30 min)</td><td><select class="verify-select"><option>Y</option><option>N</option></select></td></tr>
+                <tr><td>13</td><td>Irradiance Value (Target: 1000 W/m² ± 1%)</td><td><select class="verify-select"><option>Y</option><option>N</option></select></td></tr>
+                <tr><td>14</td><td>Reference Module (ID matched and calibration date valid)</td><td><select class="verify-select"><option>Y</option><option>N</option></select></td></tr>
+                <tr><td>15</td><td>Irradiance Check (1 Sun = 1000 W/m²)</td><td><select class="verify-select"><option>Y</option><option>N</option></select></td></tr>
+                <tr><td>16</td><td>Pneumatics & Stage (Smooth positioning)</td><td><select class="verify-select"><option>Y</option><option>N</option></select></td></tr>
+            </table>
+        </fieldset>
+
+        <!-- 6. Data Integration & Software Check -->
+        <fieldset>
+            <legend>6. Data Integration & Software Check</legend>
+            <table>
+                <tr>
+                    <th>Sr.</th>
+                    <th>Check Points</th>
+                    <th>Verify (Y/N)</th>
+                </tr>
+                <tr><td>17</td><td>I-V Curve Software (Clear previous batch)</td><td><select class="verify-select"><option>Y</option><option>N</option></select></td></tr>
+                <tr><td>18</td><td>Cable Continuity (Inspect plugs and lines)</td><td><select class="verify-select"><option>Y</option><option>N</option></select></td></tr>
+                <tr><td>19</td><td>Zero-Offset Test (Verify zero baseline)</td><td><select class="verify-select"><option>Y</option><option>N</option></select></td></tr>
+                <tr><td>20</td><td>Database Connection (Confirm MES communication)</td><td><select class="verify-select"><option>Y</option><option>N</option></select></td></tr>
+            </table>
+        </fieldset>
+
+        <!-- 7. Electrical & Performance Test -->
+        <fieldset>
+            <legend>7. Electrical & Performance Test (Reference Module)</legend>
+            <div class="form-group">
+                <label>Ref ID:</label>
+                <input type="text" name="ref_id">
+            </div>
+            <table>
+                <tr>
+                    <th>Sr.</th>
+                    <th>Reference Module Technology</th>
+                    <th>Reference Module Serial Number</th>
+                    <th>Power Rating</th>
+                </tr>
+                <tr>
+                    <td>21</td>
+                    <td><input type="text" name="ref_tech"></td>
+                    <td><input type="text" name="ref_serial"></td>
+                    <td><input type="number" step="any" name="ref_power"></td>
+                </tr>
+            </table>
+            
+            <div style="overflow-x:auto;">
+                <table>
+                    <tr>
+                        <th>Sr.</th>
+                        <th>Electrical Rating</th>
+                        <th>Voc</th>
+                        <th>Isc</th>
+                        <th>Imp</th>
+                        <th>Vmp</th>
+                        <th>Pmax</th>
+                        <th>FF</th>
+                        <th>Deviation (%)</th>
+                    </tr>
+                    <tr>
+                        <td>22/23</td>
+                        <td><strong>Ref Module Value</strong></td>
+                        <td><input type="number" step="any" name="rmv_voc"></td>
+                        <td><input type="number" step="any" name="rmv_isc"></td>
+                        <td><input type="number" step="any" name="rmv_imp"></td>
+                        <td><input type="number" step="any" name="rmv_vmp"></td>
+                        <td><input type="number" step="any" name="rmv_pmax"></td>
+                        <td><input type="number" step="any" name="rmv_ff"></td>
+                        <td><input type="number" step="any" name="rmv_dev"></td>
+                    </tr>
+                    <tr>
+                        <td>24</td>
+                        <td><strong>Ref Module Calibration</strong></td>
+                        <td><input type="number" step="any" name="rmc_voc"></td>
+                        <td><input type="number" step="any" name="rmc_isc"></td>
+                        <td><input type="number" step="any" name="rmc_imp"></td>
+                        <td><input type="number" step="any" name="rmc_vmp"></td>
+                        <td><input type="number" step="any" name="rmc_pmax"></td>
+                        <td><input type="number" step="any" name="rmc_ff"></td>
+                        <td><input type="number" step="any" name="rmc_dev"></td>
+                    </tr>
+                </table>
+            </div>
+        </fieldset>
+
+        <!-- 8. Module Under Testing -->
+        <fieldset>
+            <legend>8. Module Under Testing</legend>
+            <table>
+                <tr>
+                    <th>Sr.</th>
+                    <th>Module Make</th>
+                    <th>Technology</th>
+                    <th>Power Rating</th>
+                    <th>Sample Module Architecture</th>
+                </tr>
+                <tr>
+                    <td>25/26</td>
+                    <td><input type="text" name="mut_make"></td>
+                    <td>
+                        <select name="mut_tech">
+                            <option value="PERC">PERC</option>
+                            <option value="Topcon">Topcon</option>
+                            <option value="HJT">HJT</option>
+                        </select>
+                    </td>
+                    <td><input type="number" step="any" name="mut_power"></td>
+                    <td>
+                        <select name="mut_arch">
+                            <option value="Mono facial">Mono facial</option>
+                            <option value="Bi facial">Bi facial</option>
+                        </select>
+                    </td>
+                </tr>
+            </table>
+
+            <div style="overflow-x:auto;">
+                <table>
+                    <tr>
+                        <th>Sr.</th>
+                        <th>Electrical Rating</th>
+                        <th>Voc</th>
+                        <th>Isc</th>
+                        <th>Imp</th>
+                        <th>Vmp</th>
+                        <th>Pmax</th>
+                        <th>FF</th>
+                        <th>Deviation (%)</th>
+                    </tr>
+                    <tr>
+                        <td>27/28</td>
+                        <td><strong>Datasheet Values</strong></td>
+                        <td><input type="number" step="any" name="dv_voc"></td>
+                        <td><input type="number" step="any" name="dv_isc"></td>
+                        <td><input type="number" step="any" name="dv_imp"></td>
+                        <td><input type="number" step="any" name="dv_vmp"></td>
+                        <td><input type="number" step="any" name="dv_pmax"></td>
+                        <td><input type="number" step="any" name="dv_ff"></td>
+                        <td><input type="number" step="any" name="dv_dev"></td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="form-group" style="margin-top: 15px;">
+                <label>29. Proof of Calibration Validation:</label>
+                <p style="font-size: 0.9em; color: #555;">Upload a picture of the system when referencing. The image should contain the reference calibration certificate values of Isc, Voc, FF, Pmax, Imp, and Vmp.</p>
+                <input type="file" name="calibration_proof" accept="image/*">
+            </div>
+        </fieldset>
+
+        <button type="submit" class="submit-btn">Submit Safety Checks Form</button>
+    </form>
+
+</body>
+</html>
